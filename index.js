@@ -26,60 +26,85 @@ const Users = [
 
 // Users.forEach(user => {
 
-//     tasks.push(
-//         database
-//             .ref()
-//             .child('SAM_DB')
-//             .child('LOCATIONS')
-//             .child(user)
-//             .orderByChild('created_at')
-//             .limitToLast(1)
-//             .once('value')
-//             .then(users=>{
-//                 users.forEach(element => {
-//                     const now = moment.utc()
-//                     const lastLogInTime = moment(element.val().created_at);
+// Users.forEach((user) => {
+//   database
+//     .ref()
+//     .child('SAM_DB')
+//     .child('LOCATIONS')
+//     .child(user)
+//     .orderByChild('created_at')
+//     .limitToLast(1)
+//     .once('value')
+//     .then((users) => {
+//       users.forEach((element) => {
+//         const now = moment.utc();
+//         const lastLogInTime = moment(element.val().created_at);
 
-//                     var duration = moment.duration(now.diff(lastLogInTime));
-//                     var days = duration.asDays().toFixed(2);
-//                     var hours = duration.asHours().toFixed(2);
-//                     var minutes = duration.asMinutes().toFixed(2);
+//         const duration = moment.duration(now.diff(lastLogInTime));
+//         // const days = duration.asDays().toFixed(2);
+//         // const hours = duration.asHours().toFixed(2);
+//         const minutes = duration.asMinutes().toFixed(2);
 
-//                     // console.log(`${user} last updated at ${element.val().created_at}`);
-//                     console.log(`${user} last logged in ${minutes} minutes ago`);
-//                     console.log("\n")
-//                 });
-//             })
-//     );
-
-//     Promise.all(tasks).then(()=>{
-//         console.log('Done!!!')
-//     })
-
+//         // console.log(`${user} last updated at ${element.val().created_at}`);
+//         console.log(`${user} last logged in ${minutes} minutes ago`);
+//         console.log('\n');
+//       });
+//     });
 // });
 
-Users.forEach((user) => {
-  database
-    .ref()
-    .child('SAM_DB')
-    .child('LOCATIONS')
-    .child(user)
-    .orderByChild('created_at')
-    .limitToLast(1)
-    .once('value')
-    .then((users) => {
-      users.forEach((element) => {
-        const now = moment.utc();
-        const lastLogInTime = moment(element.val().created_at);
-
-        const duration = moment.duration(now.diff(lastLogInTime));
-        // const days = duration.asDays().toFixed(2);
-        // const hours = duration.asHours().toFixed(2);
-        const minutes = duration.asMinutes().toFixed(2);
-
-        // console.log(`${user} last updated at ${element.val().created_at}`);
-        console.log(`${user} last logged in ${minutes} minutes ago`);
-        console.log('\n');
+async function getClockedInUsers(users) {
+  const userMap = new Map();
+  // var userMap = ()
+  users.forEach((user) => {
+    database
+      .ref()
+      .child('SAM_DB')
+      .child('LOCATIONS')
+      .child(user)
+      .orderByChild('created_at')
+      .limitToLast(1)
+      .once('value')
+      .then((result) => {
+        result.forEach((element) => {
+          userMap.set(user, element.val().created_at);
+          // userMap.push(element.val().created_at)
+        });
+        return userMap;
       });
-    });
-});
+  });
+}
+
+async function getClockedInUsersInfo(users) {
+  const usersRefs = new Map();
+
+  users.forEach((user) => {
+    const ref = database.ref().child('SAM_DB').child('LOCATIONS').child(user)
+      .orderByChild('created_at')
+      .limitToLast(1)
+      .once('value');
+    usersRefs.set(user, ref);
+  });
+
+  return usersRefs;
+}
+
+async function test() {
+  console.log('start');
+
+  const items = await getClockedInUsersInfo(Users);
+
+  
+  // values.forEach((element) => {
+  //   const now = moment.utc();
+  //   const lastLogInTime = moment(element.val().created_at);
+  //   const duration = moment.duration(now.diff(lastLogInTime));
+  //   const minutes = duration.asMinutes().toFixed(2);
+  //   console.log(`${element} last logged in ${minutes} minutes ago`);
+  // });
+  console.log(items);
+  console.log('end');
+}
+
+(async () => {
+  await test();
+})();
