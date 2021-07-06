@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const firebase = require('firebase');
 const moment = require('moment');
+const got = require('got');
 
 const config = {
   databaseURL: 'https://trackingpoc-dbcef-default-rtdb.firebaseio.com/',
@@ -12,18 +13,18 @@ const database = firebase.database();
 const TIME_LIMIT_IN_MINUTES = 30;
 
 // get_list of logged In usersID
-const Users = [
-  '93',
-  '109',
-  '148',
-  // '108_Ananth',
-  // '111_E Elza',
-  // '101_krishna employee',
-  // '112_Niranjan',
-  // '113_pooja',
-  // '7_krishna',
-  // '98_supervisor Gadgool',
-];
+// const Users = [
+//   '93',
+//   '109',
+//   '148',
+//   // '108_Ananth',
+//   // '111_E Elza',
+//   // '101_krishna employee',
+//   // '112_Niranjan',
+//   // '113_pooja',
+//   // '7_krishna',
+//   // '98_supervisor Gadgool',
+// ];
 
 // var tasks = []
 
@@ -59,10 +60,10 @@ async function getUsersWorkInfo(userId) {
   return null;
 }
 
-async function test() {
+async function processUsers(users) {
   console.log('start');
 
-  const promises = Users.map(async (user) => getUsersWorkInfo(user));
+  const promises = users.map(async (user) => getUsersWorkInfo(user));
 
   const test1 = await Promise.all(promises);
   console.log(test1);
@@ -72,7 +73,12 @@ async function test() {
 
 (async () => {
   console.time();
-  await test();
-  console.timeEnd();
+  const url = 'http://localhost:5000/api/v1/timesheet/active';
+  const res = await got(url);
+  const result = JSON.parse(res.body);
+  if (result.length) {
+    await processUsers(res.body);
+    console.timeEnd();
+  }
   process.exit(1);
 })();
