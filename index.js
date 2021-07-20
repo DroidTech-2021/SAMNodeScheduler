@@ -22,6 +22,7 @@ const formattedUsers = {
 };
 
 async function getUsersWorkInfo(userId) {
+  console.log('Fetching data from Firebase');
   const snapshot = await database
     .ref()
     .child('SAM_DB')
@@ -32,7 +33,7 @@ async function getUsersWorkInfo(userId) {
     .once('value');
   // const users = await resp.toJson();
   const result = await snapshot.val();
-
+  console.log('Fetching data from Firebase- Complete');
   if (result) {
     // return first item of the object
     const user = result[Object.keys(result)[0]];
@@ -64,9 +65,12 @@ async function processUsers(users) {
 
   const promises = users.map(async (user) => getUsersWorkInfo(user));
 
-  const test1 = await Promise.all(promises);
-  console.log(test1);
+  console.log('running all tasks parallely');
+  const tasks = await Promise.all(promises);
+  // console.log(tasks);
 
+
+  console.log('calling verify location API');
   // todo: Call API to notify supervisor
   const { body, statusCode } = await got.post('http://localhost:5000/api/v1/zones/verifyUserLocations', {
     json: {
@@ -75,37 +79,41 @@ async function processUsers(users) {
     },
     responseType: 'json',
   });
-  console.info(body.data);
+  // console.info(body.data);
   console.info(statusCode);
-  console.info(formattedUsers);
+  // console.info(formattedUsers);
   console.log('end');
 }
 
 (async () => {
   console.time();
+  console.log('Fetch all active users');
   const url = 'http://localhost:5000/api/v1/timesheet/active';
   const res = await got(url);
   const result = JSON.parse(res.body);
-
-//  test
-// const Users = [
-//   '93',
-//   '109',
-//   '148',
-//   // '108_Ananth',
-//   // '111_E Elza',
-//   // '101_krishna employee',
-//   // '112_Niranjan',
-//   // '113_pooja',
-//   // '7_krishna',
-//   // '98_supervisor Gadgool',
-// ];
+  console.log('Fetch all active users - DONE');
+  //  test
+  // const Users = [
+  //   '93',
+  //   '109',
+  //   '148',
+  //   // '108_Ananth',
+  //   // '111_E Elza',
+  //   // '101_krishna employee',
+  //   // '112_Niranjan',
+  //   // '113_pooja',
+  //   // '7_krishna',
+  //   // '98_supervisor Gadgool',
+  // ];
 
   // const result = Users;
 
   if (result.length) {
+    console.log('Process users');
     await processUsers(result);
 
+    console.log('Process users - DONE');
+  
     // await processUsers(res.body);
     console.timeEnd();
   }
